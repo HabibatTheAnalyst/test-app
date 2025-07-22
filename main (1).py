@@ -223,7 +223,12 @@ async def render_tab_page_with_year(request: Request,
     # Get the category to determine template behavior
     category = source["page_fields"].get("Category")
     if not category and source.get("tabs"):
-        category = source["tabs"][0].get("tab_fields", {}).get("Category", "")
+        # Sort tabs by TabOrder before picking first tab for category fallback
+        sorted_tabs_for_category = sorted(
+            source["tabs"],
+            key=lambda tab: int(tab["tab_fields"].get("TabOrder", "0"))
+        )
+        category = sorted_tabs_for_category[0].get("tab_fields", {}).get("Category", "") if sorted_tabs_for_category else ""
 
     country_name = source["page_fields"].get("Country")
     democracy_title = source["page_fields"].get("Democracy-page")
@@ -240,7 +245,9 @@ async def render_tab_page_with_year(request: Request,
     elif category == "Directory of Country Resources":
         page_title = "Directory"
     else:
-        page_title = democracy_title or slug.replace("-", " ").capitalize()
+        # For democracy pages, do NOT use a tab title as fallback!
+        # Use slug-based fallback only if democracy_title is not present, and not for tracker/data
+        page_title = democracy_title if (democracy_title and category not in ["Election Tracker", "Democracy Data"]) else (slug.replace("-", " ").capitalize())
 
     # Sort tabs by TabOrder
     sorted_tabs = sorted(
@@ -256,18 +263,18 @@ async def render_tab_page_with_year(request: Request,
     if category == "Election Tracker":
         # Show all Election Tracker pages as navigation
         for page_slug, page_data in tracker_pages.items():
-            page_title = page_data["page_fields"].get("Democracy-page", "")
+            page_title_link = page_data["page_fields"].get("Democracy-page", "")
             tab_links.append({
-                "title": page_title,
+                "title": page_title_link,
                 "url": f"/{page_slug}",
                 "is_active": page_slug == slug
             })
     elif category == "Democracy Data":
         # Show all Democracy Data pages as navigation
         for page_slug, page_data in data_pages.items():
-            page_title = page_data["page_fields"].get("Democracy-page", "")
+            page_title_link = page_data["page_fields"].get("Democracy-page", "")
             tab_links.append({
-                "title": page_title,
+                "title": page_title_link,
                 "url": f"/{page_slug}",
                 "is_active": page_slug == slug
             })
