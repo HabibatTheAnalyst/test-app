@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+  <!-- Header section in its own card -->
+  <div class="page-header {% if tab_links|length > 1 %}page-header--with-divider{% endif %}">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+      <div>
+        <h1 class="page-header__title">{{ page_title }}</h1>
+        {% if country_description %}
+        <p class="page-header__description">{{ country_description }}</p>
+        {% endif %}
+      </div>
+      {% if is_country_page and country_explore_button %}
+      <div>
+        {{ country_explore_button|safe }}
+      </div>
+      {% endif %}
+    </div>
+
+    {% if tab_links|length > 1 %}
+    <div class="tabs tabs--category {% if is_country_page %}tabs--country{% endif %}">
+      {% for tab_link in tab_links %}
+      <a href="{{ tab_link.url }}" class="tabs__button {% if tab_link.is_active %}tabs__button--active{% endif %}">
+        {{ tab_link.title }}
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Single tab content -->
+  <div class="tabs__panel">
+    {% if current_tab.text %}
+    <p class="tabs__text">{{ current_tab.text }}</p>
+    {% endif %}
+
+    {# --- BEGIN: Grouped Section Containers, each in its own card --- #}
+    {% for subtab in current_tab.subtabs %}
+    {% if subtab.sections_by_year is defined and subtab.sections_by_year|length > 0 %}
+    <div class="content-container">
+      {% if subtab.title %}
+      <h3 class="section-container__title">{{ subtab.title }}</h3>
+      {% if subtab.text %}
+      <p class="subtab__text">{{ subtab.text }}</p>
+      {% endif %}
+      {% elif subtab.text %}
+      <p class="subtab__text">{{ subtab.text }}</p>
+      {% endif %}
+
+      {% if subtab.years|length == 1 and subtab.years[0] == "all" %}
+      {% for section in subtab.sections_by_year["all"] %}
+      <div class="section">
+        {% if section.Text %}
+        <p>{{ section.Text }}</p>
+        {% endif %}
+        {% if section.List %}
+        <ul>
+          {% for item in section.List %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+        {% if section.FlourishEmbed %}
+        {% if section.Charttype and 'parliament' in section.Charttype.lower() and section.Charttitle %}
+        <h4 class="chart-title">{{ section.Charttitle }}</h4>
+        {% endif %}
+        <figure>
+          <iframe src="{{ section.FlourishEmbed }}" allowfullscreen loading="lazy"
+            title="{{ section['SEO-title'] or '' }}"
+            sandbox="allow-same-origin allow-forms allow-scripts allow-downloads allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
+            width="{{ section.get('Chart-dimension', '100% x 400px').split('x')[0].strip() if section.get('Chart-dimension') else '100%' }}"
+            height="{{ section.get('Chart-dimension', '100% x 400px').split('x')[1].strip() if section.get('Chart-dimension') else '400px' }}"></iframe>
+          {% if section['SEO-figcaption'] %}
+          <figcaption style="position: absolute; left: -9999px;">
+            {{ section['SEO-figcaption'] }}
+          </figcaption>
+          {% endif %}
+        </figure>
+        {% if section['SEO-title'] or section['SEO-description'] or section['SEO-keywords'] %}
+        <script type="application/ld+json">
+                        {
+                          "@context": "https://schema.org",
+                          "@type": "Dataset",
+                          "name": "{{ section['SEO-title'] or '' }}",
+                          "description": "{{ section['SEO-description'] or '' }}",
+                          "keywords": [{% if section['SEO-keywords'] %}{% for kw in section['SEO-keywords'] %}"{{ kw }}"{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}],
+                          "creator": {
+                            "@type": "Organization",
+                            "name": "Stears"
+                          },
+                          "license": "https://creativecommons.org/licenses/by/4.0/"
+                        }
+                        </script>
+        {% endif %}
+        {% if subtab.democracy_description %}
+        <p class="chart-footnote">{{ subtab.democracy_description | safe }}</p>
+        {% endif %}
+        {% endif %}
+      </div>
+      {% endfor %}
+      {% elif subtab.years|length == 1 %}
+      {# Only one year, no year tabs, but show content for that year #}
+      {% set year = subtab.years[0] %}
+      {% for section in subtab.sections_by_year[year] %}
+      <div class="section">
+        {% if section.Text %}
+        <p>{{ section.Text }}</p>
+        {% endif %}
+        {% if section.List %}
+        <ul>
+          {% for item in section.List %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+        {% if section.FlourishEmbed %}
+        {% if section.Charttype and 'parliament' in section.Charttype.lower() and section.Charttitle %}
+        <h4 class="chart-title">{{ section.Charttitle }}</h4>
+        {% endif %}
+        <figure>
+          <iframe src="{{ section.FlourishEmbed }}" allowfullscreen loading="lazy"
+            title="{{ section['SEO-title'] or '' }}"
+            sandbox="allow-same-origin allow-forms allow-scripts allow-downloads allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
+            width="{{ section.get('Chart-dimension', '100% x 400px').split('x')[0].strip() if section.get('Chart-dimension') else '100%' }}"
+            height="{{ section.get('Chart-dimension', '100% x 400px').split('x')[1].strip() if section.get('Chart-dimension') else '400px' }}"></iframe>
+          {% if section['SEO-figcaption'] %}
+          <figcaption style="position: absolute; left: -9999px;">
+            {{ section['SEO-figcaption'] }}
+          </figcaption>
+          {% endif %}
+        </figure>
+        {% if section['SEO-title'] or section['SEO-description'] or section['SEO-keywords'] %}
+        <script type="application/ld+json">
+                        {
+                          "@context": "https://schema.org",
+                          "@type": "Dataset",
+                          "name": "{{ section['SEO-title'] or '' }}",
+                          "description": "{{ section['SEO-description'] or '' }}",
+                          "keywords": [{% if section['SEO-keywords'] %}{% for kw in section['SEO-keywords'] %}"{{ kw }}"{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}],
+                          "creator": {
+                            "@type": "Organization",
+                            "name": "Stears"
+                          },
+                          "license": "https://creativecommons.org/licenses/by/4.0/"
+                        }
+                        </script>
+        {% endif %}
+        {% if subtab.democracy_description %}
+        <p class="chart-footnote">{{ subtab.democracy_description | safe }}</p>
+        {% endif %}
+        {% endif %}
+      </div>
+      {% endfor %}
+      {% else %}
+      <div class="tabs--year {% if is_country_page %}tabs--category{% endif %}">
+        {% for year in subtab.years %}
+        {% if current_tab_slug %}
+        {% set year_url = "/" + current_slug + "-" + current_tab_slug + "{% if year != 'all' %}-" + year + "{% endif %}" %}
+        {% else %}
+        {% set year_url = "/" + current_slug + "{% if year != 'all' %}-" + year + "{% endif %}" %}
+        {% endif %}
+        <a href="{{ year_url }}" 
+           class="tabs__button--year {% if (selected_year == year) or (not selected_year and loop.first) %}tabs__button--active{% endif %}"
+           onclick="showYear(this, '{{ year }}', '{{ subtab.title | replace(' ', '_') }}'); return false;">
+          {{ year }}
+        </a>
+        {% endfor %}
+      </div>
+
+      {% for year in subtab.years %}
+      <div class="tabs__panel--year" id="year-{{ year }}-{{ subtab.title | replace(' ', '_') }}"
+        style="display: {% if (selected_year == year) or (not selected_year and loop.first) %}block{% else %}none{% endif %};">
+        {% for section in subtab.sections_by_year[year] %}
+        <div class="section">
+          {% if section.Text %}
+          <p>{{ section.Text }}</p>
+          {% endif %}
+          {% if section.List %}
+          <ul>
+            {% for item in section.List %}
+            <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+          {% if section.FlourishEmbed %}
+          {% if section.Charttype and 'parliament' in section.Charttype.lower() and section.Charttitle %}
+          <h4 class="chart-title">{{ section.Charttitle }}</h4>
+          {% endif %}
+          <figure>
+            <iframe src="{{ section.FlourishEmbed }}" allowfullscreen loading="lazy"
+              title="{{ section['SEO-title'] or '' }}"
+              sandbox="allow-same-origin allow-forms allow-scripts allow-downloads allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
+              width="{{ section.get('Chart-dimension', '100% x 400px').split('x')[0].strip() if section.get('Chart-dimension') else '100%' }}"
+              height="{{ section.get('Chart-dimension', '100% x 400px').split('x')[1].strip() if section.get('Chart-dimension') else '400px' }}"></iframe>
+            {% if section['SEO-figcaption'] %}
+            <figcaption style="position: absolute; left: -9999px;">
+              {{ section['SEO-figcaption'] }}
+            </figcaption>
+            {% endif %}
+          </figure>
+          {% if section['SEO-title'] or section['SEO-description'] or section['SEO-keywords'] %}
+          <script type="application/ld+json">
+                            {
+                              "@context": "https://schema.org",
+                              "@type": "Dataset",
+                              "name": "{{ section['SEO-title'] or '' }}",
+                              "description": "{{ section['SEO-description'] or '' }}",
+                              "keywords": [{% if section['SEO-keywords'] %}{% for kw in section['SEO-keywords'] %}"{{ kw }}"{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}],
+                              "creator": {
+                                "@type": "Organization",
+                                "name": "Stears"
+                              },
+                              "license": "https://creativecommons.org/licenses/by/4.0/"
+                            }
+                            </script>
+          {% endif %}
+          {% if subtab.democracy_description %}
+          <p class="chart-footnote">{{ subtab.democracy_description | safe }}</p>
+          {% endif %}
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+      {% endif %}
+    </div>
+    {% endif %}
+    {% endfor %}
+    {# --- END: Grouped Section Containers --- #}
+  </div>
+
+  {# More info section #}
+  {% if current_tab.more_info %}
+  <div class="content-container more-info">
+    <div class="more-info__toggle" onclick="toggleMoreInfo()">
+      <span class="more-info__title">More info about this page</span>
+      <span class="more-info__icon" id="more-info-icon">−</span>
+    </div>
+    <div class="more-info__content" id="more-info-content" style="display: block;">
+      <p>{{ current_tab.more_info | safe }}</p>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+  function showYear(button, year, subtabSlug) {
+    // Update the URL
+    const currentSlug = '{{ current_slug }}';
+    const currentTabSlug = '{{ current_tab_slug }}';
+    let newUrl;
+
+    if (year === 'all') {
+      newUrl = `/${currentSlug}-${currentTabSlug}`;
+    } else {
+      newUrl = `/${currentSlug}-${currentTabSlug}-${year}`;
+    }
+
+    // Update URL without page reload
+    window.history.pushState({}, '', newUrl);
+
+    // Show/hide year panels
+    document.querySelectorAll(`[id^="year-"][id*="${subtabSlug}"]`).forEach(panel => {
+      panel.style.display = panel.id.includes(`year-${year}`) ? 'block' : 'none';
+    });
+
+    // Update active button state
+    button.parentElement.querySelectorAll('.tabs__button--year').forEach(btn => {
+      btn.classList.remove('tabs__button--active');
+    });
+    button.classList.add('tabs__button--active');
+  }
+
+  function toggleMoreInfo() {
+    const content = document.getElementById('more-info-content');
+    const icon = document.getElementById('more-info-icon');
+
+    if (content.style.display === 'none' || content.style.display === '') {
+      content.style.display = 'block';
+      icon.textContent = '−';
+    } else {
+      content.style.display = 'none';
+      icon.textContent = '+';
+    }
+  }
+</script>
+{% endblock %}
